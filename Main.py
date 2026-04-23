@@ -8,16 +8,16 @@ from flask import Flask
 from threading import Thread
 import time
 
-# --- RENDER SERVER (BARQARORLIK UCHUN) ---
+# --- SERVER ---
 app = Flask('')
 @app.route('/')
-def home(): return "Bot is Online and Persistent!"
+def home(): return "Bot is Active!"
 
 def run():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# --- SQLITE DATABASE (MALUMOTLARNI SAQLASH) ---
+# --- DATABASE ---
 DB_NAME = "users.db"
 
 def init_db():
@@ -41,7 +41,7 @@ def get_user_data(uid, name="Foydalanuvchi"):
         res = {'name': row[0], 'orders': row[1], 'total_spent': row[2], 'reg_date': row[3]}
     conn.close(); return res
 
-# --- ASOSIY SOZLAMALAR ---
+# --- SETTINGS ---
 TOKEN = "8609066317:AAHy2380eKGF9auvYlYkg40tgVtz_6PNKH8"
 bot = telebot.TeleBot(TOKEN, threaded=False)
 MY_USERNAME = "@Saidrasulovv_s"
@@ -49,17 +49,15 @@ MY_USERNAME = "@Saidrasulovv_s"
 pending_orders = {} 
 user_states = {} 
 
-# --- ASOSIY MENYU (PROFIL YONIDA MUROJAAT BILAN) ---
+# --- MENU ---
 def main_menu(first_name):
     markup = types.InlineKeyboardMarkup()
     markup.row(types.InlineKeyboardButton("⭐ Stars olish", callback_data="buy_stars"))
     markup.row(types.InlineKeyboardButton("🎁 Gift olish", callback_data="buy_gift"))
     markup.add(types.InlineKeyboardButton("🏆 Top", callback_data="top_all"),
                types.InlineKeyboardButton("📊 Statistikam", callback_data="stats"))
-    # PROFIL VA MUROJAAT TUGMALARI BITTA QATORDA:
     markup.add(types.InlineKeyboardButton("👤 Profil", callback_data="profile"),
                types.InlineKeyboardButton("📞 Murojaat", callback_data="murojaat"))
-    
     text = (f"🐥 <b>Assalom alaykum, {first_name} botga xush kelibsiz!</b>\n\n"
             f"🛍 <i>Bot orqali «⭐ Telegram Stars» va turli xil sovg'alarni xarid qilishingiz mumkin</i>\n\n"
             f"<b>Quyidagi menyudan keraklisini tanlang 👇</b>")
@@ -77,7 +75,7 @@ def callback_handler(call):
     uid, cid, mid = call.from_user.id, call.message.chat.id, call.message.message_id
     user = get_user_data(uid, call.from_user.first_name)
 
-    # --- STARS BO'LIMI ---
+    # --- STARS (TO'LIQ 12 TA VARIANT) ---
     if call.data == "buy_stars":
         user_states[uid] = "WAITING_STARS_AMOUNT"
         text = (f"<b>⭐ Telegram Stars</b>\n\n⚠️ <b><u>Cheklovlar</u></b>\n"
@@ -85,17 +83,17 @@ def callback_handler(call):
                 f"🌀 <b>Kerakli miqdorni tanlang yoki raqam bilan yuboring 👇</b>")
         markup = types.InlineKeyboardMarkup(row_width=2)
         stars_list = [("50", 10250), ("75", 15375), ("100", 20500), ("150", 30750),
-                      ("250", 51250), ("500", 102500), ("1000", 205000), ("5000", 1025000)]
+                      ("250", 51250), ("350", 71750), ("500", 102500), ("750", 153750),
+                      ("1000", 205000), ("1500", 307500), ("2500", 512500), ("5000", 1025000)]
         btns = [types.InlineKeyboardButton(f"⭐ {s[0]} - {int(s[1]):,} so'm", callback_data=f"ord_STARS_{s[0]}_{s[1]}") for s in stars_list]
         markup.add(*btns)
         markup.row(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
         bot.edit_message_text(text, cid, mid, reply_markup=markup, parse_mode="HTML")
 
-    # --- GIFT BO'LIMI ---
+    # --- GIFT ---
     elif call.data == "buy_gift":
         text = (f"<b>🎁 Telegram Gift xarid qilish</b>\n\n"
-                f"<blockquote>ℹ️ Giftni yuborish jarayoni\n{MY_USERNAME} profili orqali anonim amalga oshiriladi</blockquote>\n\n"
-                f"🌐 <b>Iltimos, yuborish uchun kerakli Giftni tanlang 👇</b>")
+                f"<blockquote>ℹ️ Giftni yuborish jarayoni\n{MY_USERNAME} orqali amalga oshiriladi</blockquote>")
         markup = types.InlineKeyboardMarkup(row_width=2)
         gifts = [("💝", 3000), ("🧸", 3000), ("🎁", 5000), ("🌹", 5000), ("🎂", 10000), ("💐", 10000),
                  ("🚀", 10000), ("🍾", 10000), ("🏆", 20000), ("💍", 20000), ("💎", 20000), ("🎈", 10000)]
@@ -104,24 +102,18 @@ def callback_handler(call):
         markup.row(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
         bot.edit_message_text(text, cid, mid, reply_markup=markup, parse_mode="HTML")
 
-    # --- MUROJAAT BO'LIMI (YANGI) ---
     elif call.data == "murojaat":
         text = (f"📞 <b>Murojaat uchun ma'lumotlar:</b>\n\n"
                 f"📱 Tel 1: +998939438014 \n"
                 f"📱 Tel 2: +998935417516 \n\n"
-                f"💬 Telegram: {MY_USERNAME}, @ndrbkvvc\n"
-                f"<blockquote>Sizda savollar bo'lsa yoki to'lovda muammo yuzaga kelsa, murojaat qiling.</blockquote>")
+                f"💬 Telegram: {MY_USERNAME}, @ndrbkvvc")
         bot.edit_message_text(text, cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main")), parse_mode="HTML")
 
-    # --- PROFIL ---
     elif call.data == "profile":
-        text = (f"👤 <b>Sizning profilingiz</b>\n\n"
-                f"🆔 <b>ID:</b> <code>{uid}</code>\n"
-                f"📅 <b>Sana:</b> {user['reg_date']}\n"
-                f"💰 <b>Jami sarf:</b> {user['total_spent']:,} so'm")
+        text = (f"👤 <b>Sizning profilingiz</b>\n\n🆔 <b>ID:</b> <code>{uid}</code>\n"
+                f"📅 <b>Sana:</b> {user['reg_date']}\n💰 <b>Sarf:</b> {user['total_spent']:,} so'm")
         bot.edit_message_text(text, cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main")), parse_mode="HTML")
 
-    # --- BUYURTMA BOSHQARUVI ---
     elif call.data.startswith("ord_"):
         parts = call.data.split("_")
         pending_orders[uid] = {'type': parts[1], 'name': parts[2], 'price': int(parts[3]), 'msg_id': mid}
@@ -135,7 +127,6 @@ def callback_handler(call):
         back_call = "buy_stars" if parts[1] == "STARS" else "buy_gift"
         bot.edit_message_text(text, cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data=back_call)), parse_mode="HTML")
 
-    # --- TO'LOV TASDIQLASH ---
     elif call.data == "payment_done":
         order = pending_orders.get(uid)
         if order:
@@ -143,8 +134,7 @@ def callback_handler(call):
             cursor.execute("UPDATE users SET orders = orders + 1, total_spent = total_spent + ? WHERE user_id = ?", (order['price'], uid))
             conn.commit(); conn.close()
             bot.answer_callback_query(call.id, "✅ Tasdiqlandi!")
-            bot.edit_message_text("✅ <b>To'lov tasdiqlandi!</b>\n\nStatistikangiz yangilandi.", cid, mid, 
-                                  reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Menyu", callback_data="back_to_main")), parse_mode="HTML")
+            bot.edit_message_text("✅ <b>To'lov tasdiqlandi!</b>", cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Menyu", callback_data="back_to_main")), parse_mode="HTML")
             pending_orders.pop(uid, None)
 
     elif call.data in ["stats", "top_all"]:
@@ -166,7 +156,7 @@ def callback_handler(call):
         text, markup = main_menu(call.from_user.first_name)
         bot.edit_message_text(text, cid, mid, reply_markup=markup, parse_mode="HTML")
 
-# --- MESSAGE HANDLER (XATOLIKLAR BILAN) ---
+# --- HANDLERS ---
 @bot.message_handler(func=lambda m: True)
 def message_handler(message):
     uid, cid = message.from_user.id, message.chat.id
@@ -189,8 +179,6 @@ def message_handler(message):
         order = pending_orders.get(uid)
         clean_name = message.text.replace('@', '').lower().strip()
         u_own = f"@{message.from_user.username}" if message.from_user.username else "mavjud emas"
-        
-        # Foydalanuvchi xabarini o'chirish (saranjomlik uchun)
         try: bot.delete_message(cid, message.message_id)
         except: pass
 
@@ -204,28 +192,21 @@ def message_handler(message):
         except: exists = "XATO"
 
         if exists is False:
-            # XATOLIK BO'LGANDA ASOSIY HABARNI TAHRIRLASH (Siz aytgan mantiq)
             err_text = (f"<b>❌ Foydalanuvchi topilmadi: @{clean_name}</b>\n\n"
-                        f"<blockquote> Ushbu foydalanuvchi nomi orqali hech qanday profilni topa olmadik.\n\n"
-                        f"👤 <b>Masalan:</b> {MY_USERNAME}</blockquote>\n\n"
+                        f"<blockquote> Ushbu foydalanuvchi nomi orqali hech qanday profilni topa olmadik.</blockquote>\n\n"
                         f"💡 <b>Keyni sizning username:</b> <code>{u_own}</code>\n"
                         f"🖋 <b>Foydalanuvchi nomini yuboring</b>")
             bot.edit_message_text(err_text, cid, order['msg_id'], reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main")), parse_mode="HTML")
             return
 
         user_states[uid] = "IDLE"
-        res_text = (f"🏪 <b>Buyurtma yaratildi</b>\n\n"
-                    f"<blockquote>■ <b>Turi:</b> {order['type']} ({order['name']})\n"
-                    f"■ <b>Username:</b> @{clean_name}\n"
-                    f"■ <b>Summa:</b> {order['price']:,} so'm</blockquote>\n\n"
-                    f"💳 <b>To'lov usulini tanlang:</b>")
-        pay_markup = types.InlineKeyboardMarkup()
-        pay_markup.add(types.InlineKeyboardButton("🔹 Click orqali to'lash", url="https://click.uz/"))
-        pay_markup.add(types.InlineKeyboardButton("✅ To'lovni qildim", callback_data="payment_done"))
-        pay_markup.add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
-        bot.edit_message_text(res_text, cid, order['msg_id'], reply_markup=pay_markup, parse_mode="HTML")
+        res_text = (f"🏪 <b>Buyurtma yaratildi</b>\n\n<blockquote>■ {order['type']} ({order['name']})\n■ @{clean_name}\n■ {order['price']:,} so'm</blockquote>")
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("🔹 Click orqali to'lash", url="https://click.uz/"))
+        markup.add(types.InlineKeyboardButton("✅ To'lovni qildim", callback_data="payment_done"))
+        markup.add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
+        bot.edit_message_text(res_text, cid, order['msg_id'], reply_markup=markup, parse_mode="HTML")
 
-# --- ISHGA TUSHIRISH ---
 if __name__ == "__main__":
     init_db()
     Thread(target=run).start()
