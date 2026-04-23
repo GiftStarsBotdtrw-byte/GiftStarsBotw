@@ -2,25 +2,26 @@ import telebot
 from telebot import types
 from datetime import datetime
 import requests
+import os
 from flask import Flask
 from threading import Thread
+import time
 
-# --- WEB SERVER (24/7 UCHUN) ---
+# --- SERVER QISMI (Render uchun) ---
 app = Flask('')
+
 @app.route('/')
 def home():
-    return "Bot Online!"
+    return "Bot is Live!"
 
 def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+    # Render avtomatik port beradi, bo'lmasa 10000 ishlatiladi
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
 # --- ASOSIY SOZLAMALAR ---
-TOKEN = "8609066317:AAHH3vOFJhBkyjmdpkUvQWPTSgInL017Yfs"
-bot = telebot.TeleBot(TOKEN)
+TOKEN = "8609066317:AAHy2380eKGF9auvYlYkg40tgVtz_6PNKH8"
+bot = telebot.TeleBot(TOKEN, threaded=False)
 MY_USERNAME = "@Saidrasulovv_s"
 
 users_db = {} 
@@ -213,10 +214,19 @@ def message_handler(message):
         pay_markup.add(types.InlineKeyboardButton("⬅️ Menyu", callback_data="back_to_main"))
         bot.edit_message_text(res_text, cid, order['msg_id'], reply_markup=pay_markup, parse_mode="HTML")
 
-# --- BOTNI ISHGA TUSHIRISH ---
+# --- ISHGA TUSHIRISH (Render barqarorligi uchun) ---
 if __name__ == "__main__":
-    keep_alive() # Serverni ishga tushiradi
-    print("Bot ishladi...")
-    bot.polling(none_stop=True)
+    t = Thread(target=run)
+    t.daemon = True
+    t.start()
+    
+    print("🚀 Bot Renderda ishga tushdi...")
+    while True:
+        try:
+            bot.infinity_polling(timeout=90, long_polling_timeout=10)
+        except Exception as e:
+            print(f"Xato: {e}")
+            time.sleep(10)
+        
 
   
