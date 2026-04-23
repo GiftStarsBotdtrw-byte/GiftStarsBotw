@@ -109,7 +109,9 @@ def callback_handler(call):
         text = (f"📞 <b>Murojaat uchun ma'lumotlar:</b>\n\n"
                 f"📱 Tel 1: +998939438014 \n"
                 f"📱 Tel 2: +998935417516 \n\n"
-                f"💬 Telegram: {MY_USERNAME}\n"
+                f"💬 Telegram: 
+                {MY_USERNAME}\n
+                @ndrbkvvc\n"
                 f"<blockquote>Sizda savollar bo'lsa yoki to'lovda muammo yuzaga kelsa, murojaat qiling.</blockquote>")
         bot.edit_message_text(text, cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main")), parse_mode="HTML")
 
