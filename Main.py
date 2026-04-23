@@ -234,7 +234,7 @@ def message_handler(message):
         user_states[uid] = "IDLE"
         res_text = (f"🏪 <b>Buyurtma yaratildi</b>\n\n<blockquote>■ {order['type']} ({order['name']})\n■ @{clean_name}\n■ {order['price']:,} so'm</blockquote>")
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🔹 Click orqali to'lash", url="https://click.uz/"))
+        markup.add(types.InlineKeyboardButton("🔹 Click orqali to'lash", url="https://my.click.uz/clickp2p/4F5481413737ED44B0521679F9C4265C3E500746BA0CA6488A8A5977BE4CC9A7"))
         markup.add(types.InlineKeyboardButton("✅ To'lovni qildim", callback_data="payment_done"))
         markup.add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
         bot.edit_message_text(res_text, cid, order['msg_id'], reply_markup=markup, parse_mode="HTML")
