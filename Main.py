@@ -47,12 +47,13 @@ def get_user_data(uid, name="Foydalanuvchi"):
 
 # --- SETTINGS ---
 TOKEN = "8609066317:AAHy2380eKGF9auvYlYkg40tgVtz_6PNKH8"
-bot = telebot.TeleBot(TOKEN, threaded=True) # Qotishni oldini olish uchun
+bot = telebot.TeleBot(TOKEN, threaded=True) # Multithreading yoqildi
 MY_USERNAME = "@Saidrasulovv_s"
 
 pending_orders = {} 
 user_states = {} 
 
+# --- MENYU FUNKSIYALARI ---
 def main_menu(first_name):
     markup = types.InlineKeyboardMarkup()
     markup.row(types.InlineKeyboardButton("⭐ Stars olish", callback_data="buy_stars"))
@@ -178,7 +179,6 @@ def message_handler(message):
             pending_orders[uid] = {'type': "STARS", 'name': str(amount), 'price': price, 'msg_id': sent.message_id}
             user_states[uid] = "WAITING_USERNAME"
 
-    # --- SIZ YUBORGAN USERNAME TEKSHIRUVI ---
     elif state == "WAITING_USERNAME":
         order = pending_orders.get(uid)
         clean_name = message.text.replace('@', '').lower().strip()
@@ -214,8 +214,21 @@ def message_handler(message):
         markup.add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main"))
         bot.edit_message_text(res_text, cid, order['msg_id'], reply_markup=markup, parse_mode="HTML")
 
+# --- ASOSIY ISHGA TUSHIRISH QISMI ---
 if __name__ == "__main__":
     init_db()
+    
+    # 1. Flask serverni daemon (fonda) rejimida ishga tushirish
     Thread(target=run, daemon=True).start()
-    bot.infinity_polling(skip_pending=True, timeout=20)
+    
+    # 2. Konfliktlarni (409 error) oldini olish uchun tayyorgarlik
+    try:
+        bot.remove_webhook() # Webhookni tozalash
+        time.sleep(1)        # Renderga eski instanceni o'chirish uchun vaqt berish
+    except:
+        pass
+
+    # 3. Infinity Pollingni xatoliklarga chidamli rejimda yoqish
+    # skip_pending=True - bot o'chiq vaqtida yuborilgan xabarlarni o'tkazib yuboradi (qotishning oldini oladi)
+    bot.infinity_polling(skip_pending=True, timeout=20, long_polling_timeout=5)
         
