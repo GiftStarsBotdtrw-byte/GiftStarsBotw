@@ -119,7 +119,7 @@ def callback_handler(call):
         bot.edit_message_text(text, cid, mid, reply_markup=markup, parse_mode="HTML")
 
     elif call.data == "murojaat":
-        text = f"📞 <b>Murojaat uchun ma'lumotlar:</b>\n\n📱 Tel 1: +998939438014\n📱 Tel 2: +998935417516\n\n💬 Telegram: {MY_USERNAME}, @ndrbkvvc"
+        text = f"📞 <b>Murojaat uchun ma'lumotlar:</b>\n\n📱 Tel 1: +9989394380148\n📱 Tel 2: +998935417516\n\n💬 Telegram: {MY_USERNAME}, @ndrbkvvc"
         bot.edit_message_text(text, cid, mid, reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("⬅️ Ortga", callback_data="back_to_main")), parse_mode="HTML")
 
     elif call.data == "profile":
